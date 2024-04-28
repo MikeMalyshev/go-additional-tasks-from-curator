@@ -1,4 +1,4 @@
-package main
+package tasks
 
 import (
 	"bufio"
@@ -83,7 +83,7 @@ func processString(text string) string {
 	return output
 }
 
-func main() {
+func TextStyleSwitcher() {
 	fmt.Println("Utility converts CamelStyle text to underline_style, for example")
 	testString := "\"NothingToDoWithIt At ALL, i'm shure! But_when_i write so, something_can_happen\""
 	fmt.Print(testString)
@@ -95,8 +95,9 @@ func main() {
 	reader := bufio.NewReader(os.Stdin)
 
 	var text, str string
-	str, _ = reader.ReadString(';')
+	str, _ = reader.ReadString('\n')
 	text += str
 
+	fmt.Println("\nResult:")
 	fmt.Println(processString(text))
 }
