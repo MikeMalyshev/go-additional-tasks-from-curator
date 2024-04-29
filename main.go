@@ -12,7 +12,7 @@ func main() {
 		fmt.Println("\nChoose the task:")
 		fmt.Println("\t1 - TextStyleSwitcher")
 		fmt.Println("\t2 - MapFromString")
-		fmt.Println("\t3 - Calculator")
+		fmt.Println("\t3 - PriceInWords")
 
 		fmt.Printf("\nPrint the number of the task to begin (0 to exit):")
 		_, err := fmt.Fscan(os.Stdin, &idx)
