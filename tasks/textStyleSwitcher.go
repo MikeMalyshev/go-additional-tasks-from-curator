@@ -70,7 +70,7 @@ func processWord(word string) string {
 	return switchToCamelCase(word)
 }
 
-func processString(text string) string {
+func TextStyleSwitcher(text string) string {
 	inputWordList := strings.Split(text, string(Space))
 
 	var output string
@@ -83,12 +83,12 @@ func processString(text string) string {
 	return output
 }
 
-func TextStyleSwitcher() {
+func TestTextStyleSwitcher() {
 	fmt.Println("\nThis utility converts CamelStyled text to undescored_style, for example:")
 	testString := "\t\" NothingToDoWithIt At ALL, i'm shure! But_when_i write so, something_can_happen \""
 	fmt.Println(testString)
 	fmt.Println("will be converted to:")
-	fmt.Println(processString(testString))
+	fmt.Println(TextStyleSwitcher(testString))
 
 	fmt.Println("\nWaiting your text:")
 
@@ -96,5 +96,5 @@ func TextStyleSwitcher() {
 	str, _ := reader.ReadString('\n')
 
 	fmt.Println("\nResult:")
-	fmt.Println(processString(str))
+	fmt.Println(TextStyleSwitcher(str))
 }

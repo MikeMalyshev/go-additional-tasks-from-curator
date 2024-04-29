@@ -11,7 +11,8 @@ func main() {
 	for idx != 0 {
 		fmt.Println("\nChoose the task:")
 		fmt.Println("\t1 - TextStyleSwitcher")
-		fmt.Println("\t2 - Calculator")
+		fmt.Println("\t2 - MapFromString")
+		fmt.Println("\t3 - Calculator")
 
 		fmt.Printf("\nPrint the number of the task to begin (0 to exit):")
 		_, err := fmt.Fscan(os.Stdin, &idx)
@@ -22,9 +23,11 @@ func main() {
 		case 0:
 			fmt.Println("Stopped")
 		case 1:
-			tasks.TextStyleSwitcher()
+			tasks.TestTextStyleSwitcher()
 		case 2:
-			tasks.MapFromString()
+			tasks.TestMapFromString()
+		case 3:
+			tasks.TestValueInTextFormat()
 		default:
 			fmt.Printf("\nError: %d is not configured yet\n\n", idx)
 		}

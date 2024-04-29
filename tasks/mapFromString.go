@@ -22,9 +22,10 @@ func readExpression(expression string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
-func readInput(text string) (map[string]string, error) {
+func MapFromString(text string) (map[string]string, error) {
 	text = strings.ReplaceAll(text, string(Space), "")
 	text = strings.ReplaceAll(text, string(Tabulation), "")
+
 	inputList := strings.Split(text, string(Separator))
 	varMap := make(map[string]string)
 
@@ -40,15 +41,15 @@ func readInput(text string) (map[string]string, error) {
 	return varMap, nil
 }
 
-func MapFromString() {
+func TestMapFromString() {
 	fmt.Println("\nThis utility makes a map from a string dataset, for example from:")
 	testString := "a= 2; b=sdfadg; c= 1 4. 123; d =fj2, a34, 444"
 	fmt.Println(testString)
 	fmt.Println("will be done the next map:")
-	fmt.Println(readInput(testString))
+	fmt.Println(MapFromString(testString))
 
 	reader := bufio.NewReader(os.Stdin)
 	str, _ := reader.ReadString('\n')
 
-	fmt.Println(readInput(str))
+	fmt.Println(MapFromString(str))
 }
