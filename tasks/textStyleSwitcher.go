@@ -12,7 +12,7 @@ const (
 	UnderLine = '_'
 	Space     = ' '
 
-	UnderLinedStyle = 1
+	underLinedStyle = 1
 	CamelStyle      = 2
 )
 
@@ -58,7 +58,7 @@ func switchToUnderScore(word string) string {
 
 func checkWordWritingStyle(word string) int {
 	if strings.Contains(word, string(UnderLine)) {
-		return UnderLinedStyle
+		return underLinedStyle
 	}
 	return CamelStyle
 }
@@ -84,20 +84,17 @@ func processString(text string) string {
 }
 
 func TextStyleSwitcher() {
-	fmt.Println("Utility converts CamelStyle text to underline_style, for example")
-	testString := "\"NothingToDoWithIt At ALL, i'm shure! But_when_i write so, something_can_happen\""
-	fmt.Print(testString)
-	fmt.Print(" will be converted to ")
+	fmt.Println("\nThis utility converts CamelStyled text to undescored_style, for example:")
+	testString := "\t\" NothingToDoWithIt At ALL, i'm shure! But_when_i write so, something_can_happen \""
+	fmt.Println(testString)
+	fmt.Println("will be converted to:")
 	fmt.Println(processString(testString))
 
 	fmt.Println("\nWaiting your text:")
 
 	reader := bufio.NewReader(os.Stdin)
-
-	var text, str string
-	str, _ = reader.ReadString('\n')
-	text += str
+	str, _ := reader.ReadString('\n')
 
 	fmt.Println("\nResult:")
-	fmt.Println(processString(text))
+	fmt.Println(processString(str))
 }

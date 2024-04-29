@@ -9,17 +9,24 @@ import (
 func main() {
 	idx := -1
 	for idx != 0 {
-		fmt.Println("Choose the task. Print the number of the task to begin (0 to exit):")
-		fmt.Println("1 - TextStyleSwitcher")
-		fmt.Println("2 - Calculator")
-		fmt.Fscan(os.Stdin, &idx)
+		fmt.Println("\nChoose the task:")
+		fmt.Println("\t1 - TextStyleSwitcher")
+		fmt.Println("\t2 - Calculator")
+
+		fmt.Printf("\nPrint the number of the task to begin (0 to exit):")
+		_, err := fmt.Fscan(os.Stdin, &idx)
+		if err != nil || idx < 0 {
+			fmt.Println("\nError: Incorrect input\n")
+		}
 		switch idx {
 		case 0:
 			fmt.Println("Stopped")
 		case 1:
 			tasks.TextStyleSwitcher()
+		case 2:
+			tasks.MapFromString()
 		default:
-			fmt.Printf("\n0Error: %d is not configured yet\n", idx)
+			fmt.Printf("\nError: %d is not configured yet\n\n", idx)
 		}
 	}
 }
