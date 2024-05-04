@@ -114,7 +114,7 @@ func TestValueInTextFormat() {
 	var price float64
 	_, err := fmt.Fscan(os.Stdin, &price)
 	if err != nil || price < 0 {
-		fmt.Println("\nError: Incorrect input\n")
+		fmt.Println("\nError: Incorrect input")
 	}
 	result, _ := ValueInTextFormat(price)
 	fmt.Printf("\n\t%.2f : %s\n", price, result)
