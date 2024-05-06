@@ -3,11 +3,11 @@ package main
 import (
 	"fmt"
 	tasks "golangLearning/tasks"
+	xml "golangLearning/tasks/xmlparser"
 	"os"
 )
 
 func main() {
-	fmt.Println(tasks.Factorial(5))
 	idx := -1
 	for idx != 0 {
 		fmt.Println("\nChoose the task:")
@@ -16,6 +16,8 @@ func main() {
 		fmt.Println("\t3 - PriceInWords")
 		fmt.Println("\t4 - Calculate Factorial")
 		fmt.Println("\t5 - Calculate Fibonacci")
+		fmt.Println("\t6 - HanoiSolver")
+		fmt.Println("\t7 - TextToXmlParser")
 
 		fmt.Printf("\nPrint the number of the task to begin (0 to exit):")
 		_, err := fmt.Fscan(os.Stdin, &idx)
@@ -35,6 +37,10 @@ func main() {
 			tasks.TestFactorial()
 		case 5:
 			tasks.TestFibonacci()
+		case 6:
+			tasks.TestHanoiSolver()
+		case 7:
+			xml.TestTextToXmlParser()
 		default:
 			fmt.Printf("\nError: %d is not configured yet\n\n", idx)
 		}
