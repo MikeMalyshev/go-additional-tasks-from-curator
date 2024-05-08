@@ -48,11 +48,13 @@ func TestTextToXmlParser() {
 	outputTxt := "tasks/xmlparser/data/output.txt"
 
 	fmt.Printf("\nPrint the number of the test to begin (1 to perform xmlParser, 2 to perform textParser, 0 to exit):")
+
 	var idx int
 	_, err := fmt.Fscan(os.Stdin, &idx)
 	if err != nil || idx < 0 {
 		fmt.Println("\nError: Incorrect input")
 	}
+
 	switch idx {
 	case 0:
 		fmt.Println("Exit")
@@ -136,12 +138,7 @@ func saveOutput(filepath, output string) {
 	if err != nil {
 		fmt.Println("unable to create file:", err)
 	}
-
-	defer func() {
-		if err = file.Close(); err != nil {
-			fmt.Printf("\nerror while closing file: %s\n", err)
-		}
-	}()
+	defer file.Close()
 
 	file.WriteString(output)
 }
@@ -314,14 +311,14 @@ func parseXml(data string, startIdx int, elements []string, previousTag tag, fin
 
 // Finds the next 'tag' in 'data', marks it as close or open and returns the index by which this tag ends
 func nextTag(data string, startIdx int) (tag, error) {
-	nameFirstIdx, nameLastIdx, tagFirstIdx, tagLastIdx := -1, -1, -1, -1
+	contentFirstIdx, contentLastIdx, tagFirstIdx, tagLastIdx := -1, -1, -1, -1
 	info := noTag
 
 	// Searching for '<'
 	for i, s := range data[startIdx:] {
 		if s == '<' {
 			tagFirstIdx = startIdx + i
-			nameFirstIdx = tagFirstIdx + 1
+			contentFirstIdx = tagFirstIdx + 1
 			info = openTag
 			break
 		}
@@ -333,16 +330,16 @@ func nextTag(data string, startIdx int) (tag, error) {
 	}
 
 	// Checking whether it is a close tag
-	if data[nameFirstIdx] == '/' {
+	if data[contentFirstIdx] == '/' {
 		info = closeTag
-		nameFirstIdx++
+		contentFirstIdx++
 	}
 
 	// Searching for '>'
-	for i, s := range data[nameFirstIdx:] {
+	for i, s := range data[contentFirstIdx:] {
 		if s == '>' {
-			nameLastIdx = nameFirstIdx + i
-			tagLastIdx = nameLastIdx + 1
+			contentLastIdx = contentFirstIdx + i
+			tagLastIdx = contentLastIdx + 1
 			break
 		}
 	}
@@ -352,7 +349,7 @@ func nextTag(data string, startIdx int) (tag, error) {
 		return tag{}, fmt.Errorf("couldn't find end of a tag (idx:%d)", tagLastIdx)
 	}
 
-	content := data[nameFirstIdx:nameLastIdx]
+	content := data[contentFirstIdx:contentLastIdx]
 	name := strings.Split(content, " ")[0]
 
 	return tag{name, content, info, tagFirstIdx, tagLastIdx}, nil
