@@ -25,7 +25,6 @@ func TestHanoiSolver() {
 		fmt.Println("Too many disks to begin")
 		return
 	}
-	fmt.Println("Steps:")
 	Hanoi(idx)
 }
 
@@ -34,6 +33,7 @@ func Hanoi(num int) {
 	B := rod{"'B'", 0}
 	C := rod{"'C'", 0}
 
+	fmt.Println("Steps:")
 	hanoiSolver(&A, &B, &C, num)
 }
 
