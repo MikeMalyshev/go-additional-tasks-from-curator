@@ -4,5 +4,5 @@ Just several additional tasks when learning golang:
 3 - PriceInWords;
 4 - Calculate Factorial;
 5 - Calculate Fibonacci;
-6 - HanoiSolver
-7 - TextToXmlParser
+6 - HanoiSolver;
+7 - TextToXmlParser;

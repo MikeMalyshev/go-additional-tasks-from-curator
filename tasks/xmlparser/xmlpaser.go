@@ -1,7 +1,6 @@
 package xmlparser
 
 import (
-	"bufio"
 	"fmt"
 	"io"
 	"os"
@@ -14,20 +13,25 @@ const (
 	Equalize          = '='
 
 	XMLIndent = "   "
-
-	// Three types of Tags
-	noTag    = 0
-	openTag  = 1
-	closeTag = 2
 )
 
+// Three types of Tags for tag structure
+const (
+	noTag = iota
+	openTag
+	closeTag
+)
+
+// Struct to store the tag information, whitch is returned by nextTag()
 type tag struct {
 	name     string
+	content  string
 	tagInfo  int
 	firstIdx int
 	lastIdx  int
 }
 
+// Struct to store the number of hits, while comparing tag sequences
 type hits struct {
 	count               int
 	idx                 int
@@ -35,41 +39,55 @@ type hits struct {
 	unavailableSequence []string
 }
 
+// Testing function
 func TestTextToXmlParser() {
-	input := "tasks/xmlparser/data/input.txt"
-	output := "tasks/xmlparser/data/output.xml"
-	fmt.Println("\n\tThis utility converts string comands like 'a.b.c=345' to xml-document.")
-	fmt.Printf("\n\tInput expressions will be taken from \"%s\", output will be saved to \"%s\"\n", input, output)
-	fmt.Printf("\nPress any key to continue ...")
-	bufio.NewReader(os.Stdin).ReadBytes('\n')
-	saveOutput(output, parseInputFile(input))
+	inputXml := "tasks/xmlparser/data/input.xml"
+	inputTxt := "tasks/xmlparser/data/input.txt"
+
+	outputXml := "tasks/xmlparser/data/output.xml"
+	outputTxt := "tasks/xmlparser/data/output.txt"
+
+	fmt.Printf("\nPrint the number of the test to begin (1 to perform xmlParser, 2 to perform textParser, 0 to exit):")
+	var idx int
+	_, err := fmt.Fscan(os.Stdin, &idx)
+	if err != nil || idx < 0 {
+		fmt.Println("\nError: Incorrect input")
+	}
+	switch idx {
+	case 0:
+		fmt.Println("Exit")
+	case 1:
+		output, err := parseInputXml(inputXml)
+
+		if err != nil {
+			fmt.Printf("An error have occured while parsing file %s:%s", inputXml, err)
+		}
+		saveOutput(outputTxt, output)
+		fmt.Printf("\n\tDone: Input have been taken from \"%s\", output have been be saved to \"%s\"\n", inputXml, outputTxt)
+	case 2:
+		output, err := parseInputTxt(inputTxt)
+
+		if err != nil {
+			fmt.Printf("An error have occured while parsing file %s:%s", inputXml, err)
+		}
+		saveOutput(outputXml, output)
+		fmt.Printf("\n\tDone: Input have been taken from \"%s\", output have been be saved to \"%s\"\n", inputTxt, outputXml)
+	default:
+		fmt.Printf("\nError: %d is not configured yet\n\n", idx)
+	}
 }
 
-func parseInputFile(filePath string) string {
-	file, err := os.Open(filePath)
+// Parser for text files. Elements presented as "E1.E2.E2 = Val" are converted to XML format
+func parseInputTxt(filePath string) (string, error) {
+	input, err := readFile(filePath)
 	if err != nil {
-		fmt.Printf("\nfile reading error: %s\n", err)
-		return ""
+		return "", fmt.Errorf("error opening file: %w", err)
 	}
-
-	defer func() {
-		if err = file.Close(); err != nil {
-			fmt.Printf("\nerror while closing file: %s\n", err)
-		}
-	}()
-
-	data, err := io.ReadAll(file)
-	if err != nil {
-		fmt.Printf("\nerror while reading file: %s\n", err)
-		return ""
-	}
-
-	strData := string(data)
-	expressionList := strings.Split(strData, string(Separator))
+	expressionList := strings.Split(input, string(Separator))
 
 	var output string
 	for _, expression := range expressionList {
-		path, value, err := parseInputExpression(expression)
+		path, value, err := parseInputTextExpression(expression)
 		if err != nil {
 			fmt.Printf("error parsing input expression: %v", err)
 			continue
@@ -77,7 +95,39 @@ func parseInputFile(filePath string) string {
 
 		output = addElement(output, path, value)
 	}
-	return output
+	return output, nil
+}
+
+// Parser for Xml files. Element from XML format are converted to text format presented as "E1.E2.E2 = Val"
+func parseInputXml(filePath string) (string, error) {
+	input, err := readFile(filePath)
+	if err != nil {
+		return "", fmt.Errorf("error opening file: %w", err)
+	}
+
+	output, err := parseXml(input, 0, []string{}, tag{}, []string{})
+	if err != nil {
+		return "", fmt.Errorf("error parsing xml:  %w", err)
+	}
+
+	return strings.Join(output, "; "), nil
+}
+
+func readFile(filePath string) (string, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		err = fmt.Errorf("file reading error: %w", err)
+		return "", err
+	}
+	defer file.Close()
+
+	data, err := io.ReadAll(file)
+	if err != nil {
+		err = fmt.Errorf("error while reading file: %w", err)
+		return "", err
+	}
+
+	return string(data), nil
 }
 
 func saveOutput(filepath, output string) {
@@ -94,11 +144,10 @@ func saveOutput(filepath, output string) {
 	}()
 
 	file.WriteString(output)
-
-	fmt.Println("Done.")
 }
 
-func parseInputExpression(expr string) ([]string, string, error) {
+// Parser for expressions in text file, splited by ";"
+func parseInputTextExpression(expr string) ([]string, string, error) {
 	expr = strings.TrimSpace(expr)
 	pair := strings.Split(expr, string(Equalize))
 
@@ -113,13 +162,16 @@ func parseInputExpression(expr string) ([]string, string, error) {
 	return valuePath, value, nil
 }
 
-// Add elements presented int 'path' as E1.E2.E2 = 'value' to 'data' string in XML format
+// Add a 'value' to 'data' string using XML format. Destination to a value must be given in 'tagSequence'
 func addElement(data string, targetTagSequence []string, value string) string {
-	unavailableTagSequence, idx := findBestPath(data, targetTagSequence)
+	maxHits, _, err := parseInsertedTags(data, 0, []string{}, targetTagSequence, hits{}, noTag)
+	if err != nil {
+		fmt.Println(err)
+	}
 
-	additionalTags := createTags(unavailableTagSequence, value, len(targetTagSequence)-len(unavailableTagSequence))
+	additionalTags := createTags(maxHits.unavailableSequence, value, len(targetTagSequence)-len(maxHits.unavailableSequence))
 
-	return data[:idx] + additionalTags + data[idx:]
+	return data[:maxHits.idx] + additionalTags + data[maxHits.idx:]
 }
 
 // func createTags creates all necessary tags,  specified by 'tagSequence'. The last tag wil have a nested 'value'.
@@ -144,15 +196,6 @@ func createTags(tagSequence []string, value string, level int) string {
 
 // Find longest existing sequence of tags in 'data', returns the unavailable part of sequence
 // and index where it should be placed acording to target 'searchingSequence'
-func findBestPath(data string, searchingSequence []string) ([]string, int) {
-	var tagSequence []string
-
-	maxHits, _, err := parseTags(data, 0, tagSequence, searchingSequence, hits{}, noTag)
-	if err != nil {
-		fmt.Println(err)
-	}
-	return maxHits.unavailableSequence, maxHits.idx
-}
 
 // Compares two sequences and return number of hits in a row
 func compareSequences(seq1, seq2 []string) int {
@@ -171,12 +214,12 @@ func compareSequences(seq1, seq2 []string) int {
 	return hits
 }
 
-// TagParser finds the longest existing way to 'searchingSequence'
+// parseInsertedTags finds the longest existing way to 'searchingSequence'
 // It also checks wheather transitional element is trying to be put into valued element
 // or either if a valued element is trying to be put into transitional element
 // The result is 'hits' structure, which contains estimated longest sequence and an unavailable sequence
 // that should be created and the index of the last tag in existing sequence
-func parseTags(data string, startIdx int, currentSequence, searchingSequence []string, maxHits hits, prevTagInfo int) (hits, int, error) {
+func parseInsertedTags(data string, startIdx int, currentSequence, searchingSequence []string, maxHits hits, prevTagInfo int) (hits, int, error) {
 	if len(strings.TrimSpace(data)) == 0 {
 		return hits{0, 0, searchingSequence, searchingSequence}, noTag, nil
 	}
@@ -233,7 +276,40 @@ func parseTags(data string, startIdx int, currentSequence, searchingSequence []s
 			return maxHits, next.tagInfo, err
 		}
 	}
-	return parseTags(data, next.lastIdx+1, currentSequence, searchingSequence, maxHits, next.tagInfo)
+	return parseInsertedTags(data, next.lastIdx+1, currentSequence, searchingSequence, maxHits, next.tagInfo)
+}
+
+// Iteratively parses xml document 'data' starting from index 'startIdx'. Current path (tagSequence) stores in 'elements'.
+// 'previousTag' is used for finding a closed elements and to check for the posible errors in xml format
+// 'finiteElements' contains the output and returns at the end of 'data'
+func parseXml(data string, startIdx int, elements []string, previousTag tag, finiteElements []string) ([]string, error) {
+	next, err := nextTag(data, startIdx)
+	if err != nil {
+		return []string{}, fmt.Errorf("parsing tags error: %w", err)
+	}
+
+	if next.tagInfo == noTag {
+		return finiteElements, nil
+	}
+
+	if next.tagInfo == openTag {
+		elements = append(elements, next.content)
+	}
+
+	if next.tagInfo == closeTag {
+		closingTagName := elements[len(elements)-1]
+		if next.name != closingTagName {
+			return []string{}, fmt.Errorf("trying to close tag %s with a tag %s", closingTagName, next.name)
+		}
+
+		if previousTag.name == closingTagName {
+			value := data[previousTag.lastIdx:next.firstIdx]
+			finiteElements = append(finiteElements, strings.Join(elements, string(SequenceSeparator))+string(Equalize)+value)
+		}
+		elements = elements[:(len(elements))-1]
+	}
+
+	return parseXml(data, next.lastIdx+1, elements, next, finiteElements)
 }
 
 // Finds the next 'tag' in 'data', marks it as close or open and returns the index by which this tag ends
@@ -276,7 +352,8 @@ func nextTag(data string, startIdx int) (tag, error) {
 		return tag{}, fmt.Errorf("couldn't find end of a tag (idx:%d)", tagLastIdx)
 	}
 
-	name := strings.Split(data[nameFirstIdx:nameLastIdx], " ")[0]
+	content := data[nameFirstIdx:nameLastIdx]
+	name := strings.Split(content, " ")[0]
 
-	return tag{name, info, tagFirstIdx, tagLastIdx}, nil
+	return tag{name, content, info, tagFirstIdx, tagLastIdx}, nil
 }
