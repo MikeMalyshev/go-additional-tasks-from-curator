@@ -62,7 +62,8 @@ func TestTextToXmlParser() {
 		output, err := parseInputXml(inputXml)
 
 		if err != nil {
-			fmt.Printf("An error have occured while parsing file %s:%s", inputXml, err)
+			fmt.Printf("An error have occured while parsing file %s: %s", inputXml, err)
+			return
 		}
 		saveOutput(outputTxt, output)
 		fmt.Printf("\n\tDone: Input have been taken from \"%s\", output have been be saved to \"%s\"\n", inputXml, outputTxt)
@@ -70,7 +71,8 @@ func TestTextToXmlParser() {
 		output, err := parseInputTxt(inputTxt)
 
 		if err != nil {
-			fmt.Printf("An error have occured while parsing file %s:%s", inputXml, err)
+			fmt.Printf("An error have occured while parsing file %s: %s", inputXml, err)
+			return
 		}
 		saveOutput(outputXml, output)
 		fmt.Printf("\n\tDone: Input have been taken from \"%s\", output have been be saved to \"%s\"\n", inputTxt, outputXml)
@@ -91,11 +93,15 @@ func parseInputTxt(filePath string) (string, error) {
 	for _, expression := range expressionList {
 		path, value, err := parseInputTextExpression(expression)
 		if err != nil {
-			fmt.Printf("error parsing input expression: %v", err)
-			continue
+			err = fmt.Errorf("error parsing input expression: %v", err)
+			return "", err
 		}
 
-		output = addElement(output, path, value)
+		output, err = addElement(output, path, value)
+		if err != nil {
+			err = fmt.Errorf("error adding path %s to existing xml: %w", expression, err)
+			return "", err
+		}
 	}
 	return output, nil
 }
@@ -160,15 +166,15 @@ func parseInputTextExpression(expr string) ([]string, string, error) {
 }
 
 // Add a 'value' to 'data' string using XML format. Destination to a value must be given in 'tagSequence'
-func addElement(data string, targetTagSequence []string, value string) string {
+func addElement(data string, targetTagSequence []string, value string) (string, error) {
 	maxHits, _, err := parseInsertedTags(data, 0, []string{}, targetTagSequence, hits{}, noTag)
 	if err != nil {
-		fmt.Println(err)
+		return "", err
 	}
 
 	additionalTags := createTags(maxHits.unavailableSequence, value, len(targetTagSequence)-len(maxHits.unavailableSequence))
 
-	return data[:maxHits.idx] + additionalTags + data[maxHits.idx:]
+	return data[:maxHits.idx] + additionalTags + data[maxHits.idx:], nil
 }
 
 // func createTags creates all necessary tags,  specified by 'tagSequence'. The last tag wil have a nested 'value'.

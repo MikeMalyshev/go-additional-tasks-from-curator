@@ -1,1 +1,1 @@
-a.b.c=1; a.b.d=2; a.c.e=3; a.c.f=4; b=5; c.d=3; a.b.c.t=must fail; a.b=also must fail; a.b.h=must success
+a.b.c=1; a.b.d=2; a.c.e=3; a.c.f=4; b=5; c.d=3; a.b.h=must success
